@@ -4,6 +4,8 @@ import { getPatients } from "../services/fhirService";
 export default function PatientList() {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState("");
+  const [searchId, setSearchId] = useState("");
+const [birthDate, setBirthDate] = useState("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -15,7 +17,8 @@ export default function PatientList() {
     setLoading(true);
     try {
       const data = await getPatients(searchTerm, pageNum);
-      const entries = data.entry || [];
+      const entries = data.entry || []; 
+      console.log(data);
       const mapped = entries.map((e) => ({
         id: e.resource.id,
         name:
@@ -34,10 +37,17 @@ export default function PatientList() {
     }
   }
 
-  const handleSearch = (e) => {
+  const handleSearch = (e, type) => {
     e.preventDefault();
     setPage(1);
-    fetchPatients(search, 1);
+
+    if (type === "name") {
+      fetchPatients(search, 1);
+    } else if (type === "id") {
+      fetchPatients(searchId, 1);
+    } else if (type === "birthDate") {
+      fetchPatients(birthDate, 1);
+    }
   };
 
   return (
@@ -46,20 +56,51 @@ export default function PatientList() {
         FHIR Patient Viewer
       </h1>
 
-      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
+       <form onSubmit={(e) => handleSearch(e, "name")} className="flex gap-3 mb-6">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name..."
           className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
         />
-        <button
+         <button
           type="submit"
           className="bg-blue-600 text-white rounded-lg px-5 py-3 hover:bg-blue-700 transition-colors"
         >
           Search
         </button>
       </form>
+         <form onSubmit={(e) => handleSearch(e, "id")} className="flex gap-3 mb-6">
+  <input
+    value={searchId}
+    onChange={(e) => setSearchId(e.target.value)}
+    placeholder="Search by ID..."
+    className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+  />
+  <button
+    type="submit"
+    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+  >
+    Search
+  </button>
+</form>
+  <form onSubmit={(e) => handleSearch(e, "birthDate")} className="flex gap-3 mb-6">
+  <input
+    type="date"
+    value={birthDate}
+    onChange={(e) => setBirthDate(e.target.value)}
+    placeholder="Search by date of birth..."
+    className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+  />
+  <button
+    type="submit"
+    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+  >
+    Search
+  </button>
+</form>
+
+       
 
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
