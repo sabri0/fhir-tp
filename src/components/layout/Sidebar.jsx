@@ -17,7 +17,7 @@ export default function Sidebar({ onSelect }) {
 
       <nav className="flex-1 p-4 space-y-2">
         <button
-          onClick={() => handleSelect("patients")}
+          onClick={() => handleSelect("patients1")}
           className={`flex items-center w-full gap-3 px-4 py-2 rounded-lg ${
             active === "patients1"
               ? "bg-blue-600"
