@@ -19,7 +19,7 @@ export default function Sidebar({ onSelect }) {
         <button
           onClick={() => handleSelect("patients")}
           className={`flex items-center w-full gap-3 px-4 py-2 rounded-lg ${
-            active === "patients"
+            active === "patients1"
               ? "bg-blue-600"
               : "bg-gray-800 hover:bg-gray-700"
           }`}
