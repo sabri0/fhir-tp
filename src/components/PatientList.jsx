@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { getPatients } from "../services/fhirService";
+import { getPatients, getPatientById } from "../services/fhirService";
 
 export default function PatientList() {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState("");
+  const [searchId, setSearchById] = useState("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -15,6 +16,8 @@ export default function PatientList() {
     setLoading(true);
     try {
       const data = await getPatients(searchTerm, pageNum);
+      console.log('data list patient',data);
+      
       const entries = data.entry || [];
       const mapped = entries.map((e) => ({
         id: e.resource.id,
@@ -33,11 +36,61 @@ export default function PatientList() {
       setLoading(false);
     }
   }
+ async function fetchPatientById(searchTerm = "") {
+   setLoading(true);
+   try {
+     const data = await getPatientById(searchTerm);
+     console.log(data);
+
+     // Check if the response is a single Patient resource
+     let patient = null;
+
+     if (data.resourceType === "Patient") {
+       // Direct single patient response
+       patient = {
+         id: data.id,
+         name:
+           (data.name?.[0]?.given?.join(" ") || "") +
+           " " +
+           (data.name?.[0]?.family || ""),
+         gender: data.gender || "-",
+         birthDate: data.birthDate || "-",
+       };
+     } else if (Array.isArray(data.entry)) {
+       // Fallback if it's returned as a bundle (rare for getById)
+       const e = data.entry[0]?.resource;
+       if (e?.resourceType === "Patient") {
+         patient = {
+           id: e.id,
+           name:
+             (e.name?.[0]?.given?.join(" ") || "") +
+             " " +
+             (e.name?.[0]?.family || ""),
+           gender: e.gender || "-",
+           birthDate: e.birthDate || "-",
+         };
+       }
+     }
+
+     // Set the patient as a single-item array (to fit your component)
+     setPatients(patient ? [patient] : []);
+   } catch (err) {
+     console.error("Error fetching patient:", err);
+     setPatients([]);
+   } finally {
+     setLoading(false);
+   }
+ }
 
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(1);
     fetchPatients(search, 1);
+  };
+  const handleSearchById = (e) => {
+    e.preventDefault();
+    setPage(1);
+    fetchPatientById(searchId);
   };
 
   return (
@@ -51,13 +104,27 @@ export default function PatientList() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name..."
-          className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+          className="flex-1 border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <button
           type="submit"
           className="bg-blue-600 text-white rounded-lg px-5 py-3 hover:bg-blue-700 transition-colors"
         >
           Search
+        </button>
+      </form>
+      <form onSubmit={handleSearchById} className="flex gap-3 mb-6">
+        <input
+          value={searchId}
+          onChange={(e) => setSearchById(e.target.value)}
+          placeholder="Search by ID..."
+          className="flex-1 border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 text-white rounded-lg px-5 py-3 hover:bg-blue-700 transition-colors"
+        >
+          Search by ID
         </button>
       </form>
 
